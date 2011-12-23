@@ -193,6 +193,9 @@ class Application:
 		about_dialog.set_destroy_with_parent(True)
 		about_dialog.set_name(NAME)
 		about_dialog.set_version(VERSION)
+		about_dialog.set_logo(gtk.gdk.pixbuf_new_from_file(
+				os.path.abspath(os.path.join(PIXMAP_DIR, "vubat.png"))))
+
 		authors = []
 		for i, n in enumerate(AUTHOR.split(", ")):
 			authors.append(n + " <" + AUTHOR_EMAIL.split(", ")[i] + ">")
