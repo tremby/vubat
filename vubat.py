@@ -34,6 +34,12 @@ import re
 import pygtk
 pygtk.require ('2.0')
 import gtk, gobject
+try:
+    import pynotify
+except ImportError:
+    print >>sys.stderr, "Install pynotify for notification support"
+    pynotify = None
+
 
 CHECK_INTERVAL = 2000 # in milliseconds
 SAMPLE_INTERVAL = 60 # in check turns
@@ -103,11 +109,13 @@ class Application:
     def __init__ (self):
         self.info = ACPIInfo() if acpi else IBAMInfo ()
         self.icon = gtk.StatusIcon ()
-        #self.icon.connect ("activate", self.on_activate)
+        self.icon.connect ("activate", self.on_activate)
         self.icon.connect ("popup_menu", self.on_popup_menu)
         self.icon.set_visible (True)
         self.status_labels = ("Discharging", "Charging", "Charged")
         self.last_pixmap = None
+        if pynotify is not None:
+            pynotify.init("vubat")
 
     def run (self):
         self.update_status ()
@@ -152,8 +160,10 @@ class Application:
     def on_activate_response (self, widget, response, data= None):
         widget.hide ()
 
-    def on_activate (self, button, widget, data=None):
-        pass
+    def on_activate (self, icon, data=None):
+        if pynotify is not None:
+            notification = pynotify.Notification("Battery status", self.update_status(), os.path.abspath(os.path.join(PIXMAP_DIR, self.get_pixmap())))
+            notification.show()
 
     def on_popup_response (self, widget, response, data= None):
         if response == gtk.RESPONSE_OK:
