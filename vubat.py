@@ -167,7 +167,7 @@ class Application:
 						self.get_pixmap())))
 			notification.show()
 
-	def on_popup_response(self, widget, response, data= None):
+	def on_popup_response(self, widget, response, data=None):
 		if response == gtk.RESPONSE_OK:
 			gtk.main_quit()
 		else:
