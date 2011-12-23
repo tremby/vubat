@@ -2,7 +2,6 @@
 
 vubat is a system tray battery status frontend
 
-
 2. INSTALLATION
 
 to build enter:
@@ -11,15 +10,16 @@ to build enter:
 to install to /usr/local:
 "python setup.py install" (root permissions are required)
 
-
 3. USAGE
 
 vubat
 no arguments, no parameters, nothing
 
-
 4. TODO
+
+- fix FIXMEs
 
 5. CHANGELOG
 
+- added support for acpi
 - initial application development

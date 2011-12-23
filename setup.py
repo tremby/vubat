@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# setup.py for vugst by simon ortling 2008 <krabat at vonuebel dot com>
-
 """
     vubat is a battery status systray frontend.
     Copyright (C) 2008 Simon Ortling (aka Krabat vonUebel)
@@ -23,15 +21,17 @@
 """
 
 from distutils.core import setup
+import vubat
 
 setup (
-    name="vubat",
-    version="0.01",
-    description="System tray icon for battery status",
+    name=vubat.NAME,
+    version=vubat.VERSION,
+    description=vubat.DESCRIPTION,
 
-    author="simon@ortling (aka Krabat vonUebel), Bart Nagel",
-    author_email="krabat at vonuebel dot com, bart@tremby.net",
-    url="http://sourceforge.net/projects/vubat/",
+    author=vubat.AUTHOR,
+    author_email=vubat.AUTHOR_EMAIL,
+    url=vubat.URL,
+    license=vubat.LICENSE
 
     py_modules=["vubat", ],
     #requires=["pygtk>=2.0", ],
@@ -44,15 +44,3 @@ setup (
         "pixmaps/status4.png",
         "pixmaps/status5.png",
         ]),],
-
-#    classifiers=[
-#          "Development Status :: 3 - Alpha",
-#          "Environment :: X Window System (X11)",
-#          "Environment :: GTK+",
-#          "Intended Audience :: End Users/Desktop",
-#          "License :: GNU General Public License (GPL)"
-#          "Operating System :: Linux",
-#          "Operating System :: All POSIX (Linux/BSD/UNIX-like OSes)",
-#          "Programming Language :: Python",
-#          ],
-)

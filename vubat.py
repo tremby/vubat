@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# vubat.py by simon ortling 2008 <krabat at vonuebel dot com>
-# version 0.04
-# modified to support ACPI by Bart Nagel <bart@tremby.net>, 2011
+NAME="vubat"
+DESCRIPTION="System tray battery status monitor"
+AUTHOR = "Simon Ortling, Bart Nagel"
+AUTHOR_EMAIL = "krabat@vonuebel.com, bart@tremby.net"
+URL = "https://github.com/tremby/vubat"
+VERSION = "0.1.0~git"
+LICENSE = "GNU GPLv3"
+COPYRIGHT_YEAR = "2011"
 
 """
-vubat is an battery status systray frontend.
-Copyright (C) 2008 Simon Ortling (aka Krabat vonUebel)
-Copyright (C) 2011 Bart Nagel
-
 This program is free software: you can
 redistribute it and/or modify it under the terms
 of the GNU General Public License as published by
@@ -39,7 +40,6 @@ try:
 except ImportError:
     print >>sys.stderr, "Install pynotify for notification support"
     pynotify = None
-
 
 CHECK_INTERVAL = 2000 # in milliseconds
 SAMPLE_INTERVAL = 60 # in check turns
@@ -115,7 +115,7 @@ class Application:
         self.status_labels = ("Discharging", "Charging", "Charged")
         self.last_pixmap = None
         if pynotify is not None:
-            pynotify.init("vubat")
+            pynotify.init(NAME)
 
     def run (self):
         self.update_status ()
@@ -174,12 +174,29 @@ class Application:
     def on_popup_menu (self, icon, button, time):
         menu = gtk.Menu()
 
+        about = gtk.MenuItem("About")
+        about.connect("activate", self.show_about_dialog)
+        menu.append(about)
         quit = gtk.MenuItem("Quit")
         quit.connect("activate", gtk.main_quit)
         menu.append(quit)
 
         menu.show_all()
         menu.popup(None, None, gtk.status_icon_position_menu, button, time, self.icon)
+
+    def show_about_dialog(self, widget):
+        about_dialog = gtk.AboutDialog()
+
+        about_dialog.set_destroy_with_parent(True)
+        about_dialog.set_name(NAME)
+        about_dialog.set_version(VERSION)
+        authors = []
+        for i, n in enumerate(AUTHOR.split(", ")):
+            authors.append(n + " <" + AUTHOR_EMAIL.split(", ")[i] + ">")
+        about_dialog.set_authors(authors)
+
+        about_dialog.run()
+        about_dialog.destroy()
 
 if __name__ == "__main__":
     app = Application ()
