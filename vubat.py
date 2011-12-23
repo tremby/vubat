@@ -40,7 +40,7 @@ SAMPLE_INTERVAL = 60 # in check turns
 
 IBAM_RO_CMD = "ibam -sr --percentbattery"
 ACPI_RO_CMD = "acpi -b"
-ACPI_SEARCH_PTRN = re.compile("(?:((?:Disc|C)harging), )(\d+)%, ([\d:]+)")
+ACPI_SEARCH_PTRN = re.compile("(?:((?:Disc|C)harging), )(\d+)%, (.*)")
 IBAM_RW_CMD = "ibam -s --percentbattery"
 IBAM_SEARCH_PTRN = re.compile ("(^[\w|\s]+?:\s*)([\d|:]*)")
 
@@ -143,7 +143,7 @@ class Application:
                 self.info.adapted_time/3600,
                 (self.info.adapted_time/60)%60)
         except AttributeError:
-            tooltip += "\n%s remaining" % self.info.battery_time
+            tooltip += "\n%s" % self.info.battery_time
         self.icon.set_tooltip(tooltip)
 
         gobject.timeout_add (5000, self.update_status)
