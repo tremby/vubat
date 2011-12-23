@@ -1,6 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import vubat
 
-app = vubat.Application ()
-app.run ()
+app = vubat.Application()
+app.run()
