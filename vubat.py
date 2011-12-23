@@ -263,10 +263,10 @@ class Application:
 	def on_popup_menu(self, icon, button, time):
 		menu = gtk.Menu()
 
-		about = gtk.MenuItem("About")
+		about = gtk.ImageMenuItem(gtk.STOCK_ABOUT)
 		about.connect("activate", self.show_about_dialog)
 		menu.append(about)
-		quit = gtk.MenuItem("Quit")
+		quit = gtk.ImageMenuItem(gtk.STOCK_QUIT)
 		quit.connect("activate", gtk.main_quit)
 		menu.append(quit)
 
