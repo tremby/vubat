@@ -6,8 +6,8 @@ ABOUT
 
 vubat is a small system tray battery status monitor written in Python and GTK.
 
-It was originally written by Simon Ortling[1] and forked in 2011 by 
-Bart Nagel[2] to add support for ACPI and extra features.
+It was originally written by [Simon Ortling][1] and forked in 2011 by 
+[Bart Nagel][2] to add support for ACPI and extra features.
 
 [1]: http://ortling.com/vubat/
 [2]: https://github.com/tremby/vubat
@@ -22,11 +22,14 @@ REQUIREMENTS
 INSTALLATION
 ------------
 
-to build:
+It's possible to just run it from the working directory with no further steps, 
+by running the `vubat` script.
+
+To build:
 
 	python setup.py build
 
-to install to /usr/local (root permissions are required):
+To install to /usr/local (root permissions are required):
 
 	python setup.py install
 
