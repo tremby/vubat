@@ -156,7 +156,7 @@ class Application:
 
 		return tooltip
 
-	def on_activate_response(self, widget, response, data= None):
+	def on_activate_response(self, widget, response, data=None):
 		widget.hide()
 
 	def on_activate(self, icon, data=None):
