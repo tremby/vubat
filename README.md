@@ -12,6 +12,14 @@ It was originally written by [Simon Ortling][1] and forked in 2011 by
 [1]: http://ortling.com/vubat/
 [2]: https://github.com/tremby/vubat
 
+The tray icon is coloured according to the battery's status:
+
+- red when battery is discharging and below 10%
+- orange when battery is discharging and up to 30%
+- yellow when battery is discharging and up to 60%
+- green when battery is discharging and up to 100%
+- blue when battery is charging or charged
+
 REQUIREMENTS
 ------------
 
