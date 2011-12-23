@@ -31,7 +31,7 @@ setup (
     author=vubat.AUTHOR,
     author_email=vubat.AUTHOR_EMAIL,
     url=vubat.URL,
-    license=vubat.LICENSE
+    license=vubat.LICENSE,
 
     py_modules=["vubat", ],
     #requires=["pygtk>=2.0", ],
@@ -43,4 +43,4 @@ setup (
         "pixmaps/status3.png",
         "pixmaps/status4.png",
         "pixmaps/status5.png",
-        ]),],
+        ]),],)
