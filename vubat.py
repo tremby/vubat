@@ -171,16 +171,15 @@ class Application:
         else:
             widget.hide ()
 
-    def on_popup_menu (self, button, widget, data=None):
-        dialog = gtk.MessageDialog (parent=None, 
-            flags=gtk.DIALOG_DESTROY_WITH_PARENT,
-            type=gtk.MESSAGE_INFO,
-            buttons=gtk.BUTTONS_OK_CANCEL,
-            message_format="Quit?")
-        dialog.set_title ("Quit vubat?")
-        dialog.connect ("response", self.on_popup_response)
-        dialog.show ()
+    def on_popup_menu (self, icon, button, time):
+        menu = gtk.Menu()
 
+        quit = gtk.MenuItem("Quit")
+        quit.connect("activate", gtk.main_quit)
+        menu.append(quit)
+
+        menu.show_all()
+        menu.popup(None, None, gtk.status_icon_position_menu, button, time, self.icon)
 
 if __name__ == "__main__":
     app = Application ()
