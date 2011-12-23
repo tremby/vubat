@@ -29,6 +29,7 @@ If not, see <http://www.gnu.org/licenses/>.
 
 import sys, os
 import re
+import subprocess
 
 # gtk modules
 import pygtk
@@ -41,17 +42,8 @@ except ImportError:
 	pynotify = None
 
 CHECK_INTERVAL = 5000 # in milliseconds
-SAMPLE_INTERVAL = 60 # in check turns
-
-IBAM_RO_CMD = "ibam -sr --percentbattery"
-ACPI_RO_CMD = "acpi -b"
-ACPI_SEARCH_PTRN = re.compile("(Unknown|Discharging|Charging|Full), (\d+)%(?:, (.*))?")
-IBAM_RW_CMD = "ibam -s --percentbattery"
-IBAM_SEARCH_PTRN = re.compile("(^[\w|\s]+?:\s*)([\d|:]*)")
 
 LOW_THRESHOLD = 10
-
-acpi = True # FIXME: autodetect
 
 def get_pixmap_dir():
 	"""search for status icons"""
@@ -62,15 +54,33 @@ def get_pixmap_dir():
 			return item
 PIXMAP_DIR = get_pixmap_dir()
 
-class ACPIInfo:
+class BatteryInfo(object):
 	def __init__(self):
-		self.status = 0
-		self.percentage = 0
-		self.battery_time = 0
+		self.status = None
+		self.percentage = None
+		self.battery_time = None
+
+class NotAvailableException(Exception):
+	pass
+
+class ACPIInfo(BatteryInfo):
+	COMMAND = ["acpi", "--battery"]
+	SEARCH_PTRN = re.compile("(Unknown|Discharging|Charging|Full), (\d+)%(?:, (.*))?")
+
+	def __init__(self):
+		fail = False
+		try:
+			p = subprocess.Popen(self.COMMAND, stdout=subprocess.PIPE)
+			data = p.communicate()[0]
+		except OSError:
+			fail = True
+		if fail or len(data) == 0 or p.returncode != 0:
+			raise NotAvailableException("couldn't get battery info through acpi")
+		super(ACPIInfo, self).__init__()
 
 	def check(self):
-		data = os.popen(ACPI_RO_CMD).read().strip().split("\n")[0] # FIXME: currently ignoring batteries beyond battery 0
-		match = re.search(ACPI_SEARCH_PTRN, data)
+		data = subprocess.Popen(self.COMMAND, stdout=subprocess.PIPE).communicate()[0].strip().split("\n")[0] # FIXME: currently ignoring batteries beyond battery 0
+		match = re.search(self.SEARCH_PTRN, data)
 		if match is None:
 			print >>sys.stderr, "ACPI output didn't match regex: '%s'" % data
 		self.percentage = int(match.group(2))
@@ -84,26 +94,37 @@ class ACPIInfo:
 			self.status = 3
 		self.battery_time = match.group(3)
 
-class IBAMInfo:
+class IBAMInfo(BatteryInfo):
+	RO_CMD = ["ibam", "-sr", "--percentbattery"]
+	RW_CMD = ["ibam", "-s", "--percentbattery"]
+	SEARCH_PTRN = re.compile("(^[\w|\s]+?:\s*)([\d|:]*)")
+	SAMPLE_INTERVAL = 60 # in check turns
+
 	def __init__(self):
-		self.status = 0
-		self.percentage = 0
-		self.battery_time = 0
-		self.adapted_time = 0
-		self.check_count = SAMPLE_INTERVAL
+		fail = False
+		try:
+			p = subprocess.Popen(self.RO_CMD, stdout=subprocess.PIPE)
+			data = p.communicate()[0]
+		except OSError:
+			fail = True
+		if fail or len(data) == 0 or p.returncode != 0:
+			raise NotAvailableException("couldn't get battery info through ibam")
+		self.adapted_time = None
+		self.check_count = self.SAMPLE_INTERVAL
+		super(IBAMInfo, self).__init__()
 
 	def check(self):
 		self.check_count += 1
-		if self.check_count >= SAMPLE_INTERVAL:
+		if self.check_count >= self.SAMPLE_INTERVAL:
 			# check and write sample
 			self.check_count = 0
-			data = os.popen(IBAM_RW_CMD).read().strip().split("\n")
+			data = subprocess.Popen(self.RW_CMD, stdout=subprocess.PIPE).communicate()[0].strip().split("\n")
 		else:
 			# check read only
-			data = os.popen(IBAM_RO_CMD).read().strip().split("\n")
+			data = subprocess.Popen(self.RO_CMD, stdout=subprocess.PIPE).communicate()[0].strip().split("\n")
 
 		self.percentage, self.battery_time, self.adapted_time = [ 
-				int(re.search(IBAM_SEARCH_PTRN, x).group(2)) for x in data]
+				int(re.search(self.SEARCH_PTRN, x).group(2)) for x in data]
 
 		if data[1].startswith("Battery"):
 			self.status = 0
@@ -114,7 +135,13 @@ class IBAMInfo:
 
 class Application:
 	def __init__(self):
-		self.info = ACPIInfo() if acpi else IBAMInfo()
+		try:
+			self.info = IBAMInfo()
+		except NotAvailableException:
+			self.info = ACPIInfo()
+		except NotAvailableException:
+			print >>sys.stderr, "Couldn't get battery status through IBAM or ACPI"
+			sys.exit(1)
 		self.icon = gtk.StatusIcon()
 		self.icon.connect("activate", self.on_activate)
 		self.icon.connect("popup_menu", self.on_popup_menu)
