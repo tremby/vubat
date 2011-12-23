@@ -99,9 +99,9 @@ class IBAMInfo:
 		self.percentage, self.battery_time, self.adapted_time = [ 
 				int(re.search(IBAM_SEARCH_PTRN, x).group(2)) for x in data]
 
-		if data [1].startswith("Battery"):
+		if data[1].startswith("Battery"):
 			self.status = 0
-		elif data [1].startswith("Charge"):
+		elif data[1].startswith("Charge"):
 			self.status = 1
 		else:
 			self.status = 2
@@ -145,7 +145,7 @@ class Application:
 			self.icon.set_from_file(os.path.join(PIXMAP_DIR, pixmap))
 			self.last_pixmap = pixmap
 
-		tooltip = "%s\n%d%%" % (self.status_labels [self.info.status], 
+		tooltip = "%s\n%d%%" % (self.status_labels[self.info.status], 
 				self.info.percentage)
 		try:
 			tooltip += "\n%d:%02d" % (self.info.adapted_time / 3600, 
