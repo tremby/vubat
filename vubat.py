@@ -39,8 +39,12 @@ CHECK_INTERVAL = 2000 # in milliseconds
 SAMPLE_INTERVAL = 60 # in check turns
 
 IBAM_RO_CMD = "ibam -sr --percentbattery"
+ACPI_RO_CMD = "acpi -b"
+ACPI_SEARCH_PTRN = re.compile("(?:((?:Disc|C)harging), )(\d+)%, ([\d:]+)")
 IBAM_RW_CMD = "ibam -s --percentbattery"
 IBAM_SEARCH_PTRN = re.compile ("(^[\w|\s]+?:\s*)([\d|:]*)")
+
+acpi = True # FIXME: autodetect
 
 def get_pixmap_dir ():
     """search for status icons"""
@@ -50,6 +54,24 @@ def get_pixmap_dir ():
         if os.access (item, os.R_OK):
             return item
 PIXMAP_DIR = get_pixmap_dir ()
+
+class ACPIInfo:
+    def __init__(self):
+        self.status = 0
+        self.percentage = 0
+        self.battery_time = 0
+
+    def check(self):
+        data = os.popen(ACPI_RO_CMD).read().strip().split("\n")[0] # FIXME: currently ignoring batteries beyond battery 0
+        match = re.search(ACPI_SEARCH_PTRN, data)
+        self.percentage = int(match.group(2))
+        if match.group(1).startswith("Charging"):
+            self.status = 1
+        elif match.group(1).startswith("Discharging"):
+            self.status = 0
+        else:
+            self.status = 2
+        self.battery_time = match.group(3)
 
 class IBAMInfo:
     def __init__ (self):
@@ -75,11 +97,11 @@ class IBAMInfo:
         elif data [1].startswith ("Charge"):
             self.status = 1
         else:
-            self.status = 2        
+            self.status = 2
 
 class Application:
     def __init__ (self):
-        self.info = IBAMInfo ()
+        self.info = ACPIInfo() if acpi else IBAMInfo ()
         self.icon = gtk.StatusIcon ()
         #self.icon.connect ("activate", self.on_activate)
         self.icon.connect ("popup_menu", self.on_popup_menu)
@@ -113,11 +135,16 @@ class Application:
             self.icon.set_from_file (os.path.join (PIXMAP_DIR, pixmap))
             self.last_pixmap = pixmap
 
-        self.icon.set_tooltip ("%s\n%d%%\n%d:%02d"%(
+        tooltip = "%s\n%d%%" % (
             self.status_labels [self.info.status],
-            self.info.percentage, 
-            self.info.adapted_time/3600,
-            (self.info.adapted_time/60)%60))
+            self.info.percentage)
+        try:
+            tooltip += "\n%d:%02d"%(
+                self.info.adapted_time/3600,
+                (self.info.adapted_time/60)%60)
+        except AttributeError:
+            tooltip += "\n%s remaining" % self.info.battery_time
+        self.icon.set_tooltip(tooltip)
 
         gobject.timeout_add (5000, self.update_status)
 
