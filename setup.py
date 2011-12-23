@@ -4,8 +4,9 @@
 # setup.py for vugst by simon ortling 2008 <krabat at vonuebel dot com>
 
 """
-    vubat is an ibam systray frontend.
+    vubat is a battery status systray frontend.
     Copyright (C) 2008 Simon Ortling (aka Krabat vonUebel)
+    Copyright (C) 2011 Bart Nagel
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,8 +29,8 @@ setup (
     version="0.01",
     description="System tray frontend to IBAM",
 
-    author="simon@ortling (aka Krabat vonUebel)",
-    author_email="krabat at vonuebel dot com",
+    author="simon@ortling (aka Krabat vonUebel), Bart Nagel",
+    author_email="krabat at vonuebel dot com, bart@tremby.net",
     url="http://sourceforge.net/projects/vubat/",
 
     py_modules=["vubat", ],

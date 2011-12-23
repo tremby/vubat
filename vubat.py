@@ -3,10 +3,12 @@
 
 # vubat.py by simon ortling 2008 <krabat at vonuebel dot com>
 # version 0.04
+# modified to support ACPI by Bart Nagel <bart@tremby.net>, 2011
 
 """
-vubat is an ibam systray frontend.
+vubat is an battery status systray frontend.
 Copyright (C) 2008 Simon Ortling (aka Krabat vonUebel)
+Copyright (C) 2011 Bart Nagel
 
 This program is free software: you can
 redistribute it and/or modify it under the terms

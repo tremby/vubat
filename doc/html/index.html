@@ -4,7 +4,7 @@
 <head>
 <title>vubat - system tray ibam frontend</title>
 <meta name="generator" content="gvim">
-<meta name="author" content="Simon Ortling">
+<meta name="author" content="Simon Ortling, Bart Nagel">
 <meta name="description" content="vubat - system tray ibam frontend">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta http-equiv="Content-Style-Type" content="text/css">
@@ -19,7 +19,7 @@
 <h1>vubat</h1>
 <h2>system tray ibam frontend</h2>
 <p>vubat displays the status, adapted battery timing and percentage
-on mouse hover. every 2 seconds <a href="http://ibam.sourceforge.net/">ibam</a> is called in read-only mode to get current data. every 2 minutes 
+on mouse hover. every 2 seconds <a href="http://ibam.sourceforge.net/">ibam</a> or ACPI is called in read-only mode to get current data. When using ibam, every 2 minutes 
 the update process calls for a sample to be stored in ibam.</p>
 <img src="screenshot.jpg">
 <ul>icon colors:
@@ -32,9 +32,10 @@ the update process calls for a sample to be stored in ibam.</p>
 <ul>prerequisites:
 <li>python</li>
 <li>python-gtk2, python-gobject</li>
-<li>ibam</li>
+<li>ibam or acpi</li>
 </ul>
 <p>license: gpl version 3</p>
-<a href="vubat.tar.gz">download</a>
+<a href="https://github.org/tremby/vubat">download</a>
 <p><br>s. ortling 2009<br></p>
+<p><br>Bart Nagel 2011<br></p>
 </body>
