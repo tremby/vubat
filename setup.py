@@ -27,7 +27,7 @@ from distutils.core import setup
 setup (
     name="vubat",
     version="0.01",
-    description="System tray frontend to IBAM",
+    description="System tray icon for battery status",
 
     author="simon@ortling (aka Krabat vonUebel), Bart Nagel",
     author_email="krabat at vonuebel dot com, bart@tremby.net",
