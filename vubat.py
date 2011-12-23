@@ -40,7 +40,7 @@ except ImportError:
 	print >>sys.stderr, "Install pynotify for notification support"
 	pynotify = None
 
-CHECK_INTERVAL = 2000 # in milliseconds
+CHECK_INTERVAL = 5000 # in milliseconds
 SAMPLE_INTERVAL = 60 # in check turns
 
 IBAM_RO_CMD = "ibam -sr --percentbattery"
@@ -120,7 +120,7 @@ class Application:
 
 	def run(self):
 		self.update_status()
-		gobject.timeout_add(5000, self.update_status)
+		gobject.timeout_add(CHECK_INTERVAL, self.update_status)
 		try:
 			gtk.main()
 		except KeyboardInterrupt:
