@@ -245,11 +245,11 @@ class Application:
 
 	def display_notification(self):
 		if pynotify is not None:
-			notification = pynotify.Notification("Battery status", 
+			n = pynotify.Notification("Battery status", 
 					self.get_status_string(), 
 					os.path.abspath(os.path.join(PIXMAP_DIR, 
 						self.get_pixmap())))
-			notification.show()
+			n.show()
 
 	def on_activate(self, icon, data=None):
 		self.display_notification()
