@@ -121,7 +121,10 @@ class Application:
 	def run(self):
 		self.update_status()
 		gobject.timeout_add(5000, self.update_status)
-		gtk.main()
+		try:
+			gtk.main()
+		except KeyboardInterrupt:
+			pass
 
 	def get_pixmap(self):
 		if self.info.status:
