@@ -1,0 +1,40 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>vubat - system tray ibam frontend</title>
+<meta name="generator" content="gvim">
+<meta name="author" content="Simon Ortling">
+<meta name="description" content="vubat - system tray ibam frontend">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<style type="text/css">
+<!--    
+
+-->
+</style>
+<link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+<h1>vubat</h1>
+<h2>system tray ibam frontend</h2>
+<p>vubat displays the status, adapted battery timing and percentage
+on mouse hover. every 2 seconds <a href="http://ibam.sourceforge.net/">ibam</a> is called in read-only mode to get current data. every 2 minutes 
+the update process calls for a sample to be stored in ibam.</p>
+<img src="screenshot.jpg">
+<ul>icon colors:
+<li>blue = chargin, charged</li>
+<li>green = 100% - 60%</li>
+<li>yellow = 60% - 30%</li>
+<li>orange = 30% - 10%</li>
+<li>red = 10% - 0%</li>
+</ul>
+<ul>prerequisites:
+<li>python</li>
+<li>python-gtk2, python-gobject</li>
+<li>ibam</li>
+</ul>
+<p>license: gpl version 3</p>
+<a href="vubat.tar.gz">download</a>
+<p><br>s. ortling 2009<br></p>
+</body>

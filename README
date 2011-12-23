@@ -1,0 +1,25 @@
+1. ABOUT
+
+vubat is a system tray ibam frontend
+
+
+2. INSTALLATION
+
+to build enter:
+"python setup.py build"
+
+to install to /usr/local:
+"python setup.py install" (root permissions are required)
+
+
+3. USAGE
+
+vubat
+no arguments, no parameters, nothing
+
+
+4. TODO
+
+5. CHANGELOG
+
+- initial application development
