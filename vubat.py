@@ -111,6 +111,7 @@ class Application:
 
     def run (self):
         self.update_status ()
+        gobject.timeout_add (5000, self.update_status)
         gtk.main()
 
     def get_pixmap (self):
@@ -146,7 +147,7 @@ class Application:
             tooltip += "\n%s" % self.info.battery_time
         self.icon.set_tooltip(tooltip)
 
-        gobject.timeout_add (5000, self.update_status)
+        return tooltip
 
     def on_activate_response (self, widget, response, data= None):
         widget.hide ()
