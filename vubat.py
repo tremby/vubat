@@ -49,6 +49,8 @@ ACPI_SEARCH_PTRN = re.compile("(Unknown|Discharging|Charging|Full), (\d+)%(?:, (
 IBAM_RW_CMD = "ibam -s --percentbattery"
 IBAM_SEARCH_PTRN = re.compile("(^[\w|\s]+?:\s*)([\d|:]*)")
 
+LOW_THRESHOLD = 10
+
 acpi = True # FIXME: autodetect
 
 def get_pixmap_dir():
@@ -118,12 +120,16 @@ class Application:
 		self.icon.connect("popup_menu", self.on_popup_menu)
 		self.icon.set_visible(True)
 		self.status_labels =("Discharging", "Charging", "Charged", "Unknown")
+		self.last_status = None
 		self.last_pixmap = None
+		self.last_percentage = None
 		if pynotify is not None:
+			self.critical_notification = None
+			self.critical_notification_closed = False
 			pynotify.init(NAME)
 
 	def run(self):
-		self.update_status()
+		self.update_status(False)
 		gobject.timeout_add(CHECK_INTERVAL, self.update_status)
 		try:
 			gtk.main()
@@ -144,35 +150,82 @@ class Application:
 					break
 		return "status%d.png" % idx
 
-	def update_status(self):
+	def critical_notification_closed_handler(self, n):
+		print "closed handler" # FIXME: this never happens!
+		self.critical_notification_closed = True
+
+	def update_status(self, notification=True):
 		self.info.check()
 
 		pixmap = self.get_pixmap()
 		if self.last_pixmap != pixmap:
 			self.icon.set_from_file(os.path.join(PIXMAP_DIR, pixmap))
-			self.last_pixmap = pixmap
 
-		tooltip = "%s\n%d%%" % (self.status_labels[self.info.status], 
+		self.icon.set_tooltip(self.get_status_string())
+
+		if notification and pynotify is not None:
+			if self.critical_notification is not None:
+				n = self.critical_notification
+				if self.info.status == 1 or self.info.status == 2 \
+						or self.info.percentage > LOW_THRESHOLD:
+					# doesn't matter any more -- replace with normal 
+					# notification
+					n.close()
+					self.critical_notification = None
+					self.critical_notification_closed = False
+					self.display_notification()
+				elif not self.critical_notification_closed:
+					# it has not been manually closed -- update it
+					n.update("Low battery", self.get_status_string(), 
+							os.path.abspath(os.path.join(PIXMAP_DIR, 
+								self.get_pixmap())))
+					n.show()
+			elif self.info.percentage <= LOW_THRESHOLD and (
+					self.last_percentage > LOW_THRESHOLD
+					or self.info.status == 0 and self.last_status != 0):
+				# display critical notification
+				n = self.critical_notification = pynotify.Notification(
+						"Battery low", self.get_status_string(), 
+						os.path.abspath(os.path.join(PIXMAP_DIR, 
+							self.get_pixmap())))
+				n.set_urgency(pynotify.URGENCY_CRITICAL)
+				n.set_timeout(pynotify.EXPIRES_NEVER)
+				#print gobject.signal_list_names(n)
+				n.connect("closed", self.critical_notification_closed_handler)
+				n.show()
+			elif self.last_status != self.info.status:
+				self.display_notification()
+
+		self.last_status = self.info.status
+		self.last_pixmap = pixmap
+		self.last_percentage = self.info.percentage
+
+		return True
+
+	def get_status_string(self):
+		status = "%s\n%d%%" % (self.status_labels[self.info.status], 
 				self.info.percentage)
 		try:
-			tooltip += "\n%d:%02d" % (self.info.adapted_time / 3600, 
+			status += "\n%d:%02d" % (self.info.adapted_time / 3600, 
 					(self.info.adapted_time / 60) % 60)
 		except AttributeError:
-			tooltip += "\n%s" % self.info.battery_time
-		self.icon.set_tooltip(tooltip)
-
-		return tooltip
+			if self.info.battery_time is not None:
+				status += "\n%s" % self.info.battery_time
+		return status
 
 	def on_activate_response(self, widget, response, data=None):
 		widget.hide()
 
-	def on_activate(self, icon, data=None):
+	def display_notification(self):
 		if pynotify is not None:
 			notification = pynotify.Notification("Battery status", 
-					self.update_status(), 
+					self.get_status_string(), 
 					os.path.abspath(os.path.join(PIXMAP_DIR, 
 						self.get_pixmap())))
 			notification.show()
+
+	def on_activate(self, icon, data=None):
+		self.display_notification()
 
 	def on_popup_response(self, widget, response, data=None):
 		if response == gtk.RESPONSE_OK:
