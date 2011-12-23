@@ -147,3 +147,5 @@ class Application:
 if __name__ == "__main__":
     app = Application ()
     app.run ()
+
+# vi: ts=4 sts=4 sw=4 et
