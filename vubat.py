@@ -45,7 +45,7 @@ SAMPLE_INTERVAL = 60 # in check turns
 
 IBAM_RO_CMD = "ibam -sr --percentbattery"
 ACPI_RO_CMD = "acpi -b"
-ACPI_SEARCH_PTRN = re.compile("(?:((?:Disc|C)harging), )(\d+)%, (.*)")
+ACPI_SEARCH_PTRN = re.compile("(Unknown|Discharging|Charging|Full), (\d+)%(?:, (.*))?")
 IBAM_RW_CMD = "ibam -s --percentbattery"
 IBAM_SEARCH_PTRN = re.compile("(^[\w|\s]+?:\s*)([\d|:]*)")
 
@@ -69,13 +69,17 @@ class ACPIInfo:
 	def check(self):
 		data = os.popen(ACPI_RO_CMD).read().strip().split("\n")[0] # FIXME: currently ignoring batteries beyond battery 0
 		match = re.search(ACPI_SEARCH_PTRN, data)
+		if match is None:
+			print >>sys.stderr, "ACPI output didn't match regex: '%s'" % data
 		self.percentage = int(match.group(2))
-		if match.group(1).startswith("Charging"):
-			self.status = 1
-		elif match.group(1).startswith("Discharging"):
+		if match.group(1) == "Discharging":
 			self.status = 0
-		else:
+		elif match.group(1) == "Charging":
+			self.status = 1
+		elif match.group(1) == "Full":
 			self.status = 2
+		else:
+			self.status = 3
 		self.battery_time = match.group(3)
 
 class IBAMInfo:
@@ -113,7 +117,7 @@ class Application:
 		self.icon.connect("activate", self.on_activate)
 		self.icon.connect("popup_menu", self.on_popup_menu)
 		self.icon.set_visible(True)
-		self.status_labels =("Discharging", "Charging", "Charged")
+		self.status_labels =("Discharging", "Charging", "Charged", "Unknown")
 		self.last_pixmap = None
 		if pynotify is not None:
 			pynotify.init(NAME)
