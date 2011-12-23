@@ -106,7 +106,7 @@ class Application:
         #self.icon.connect ("activate", self.on_activate)
         self.icon.connect ("popup_menu", self.on_popup_menu)
         self.icon.set_visible (True)
-        self.status_labels = ("Battery", "Charging", "Charged")
+        self.status_labels = ("Discharging", "Charging", "Charged")
         self.last_pixmap = None
 
     def run (self):
