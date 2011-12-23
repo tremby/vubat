@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # vubat.py by simon ortling 2008 <krabat at vonuebel dot com>
