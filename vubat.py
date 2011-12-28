@@ -281,9 +281,13 @@ class Application:
 
 	def below_threshold(self):
 		if self.options.low_percentage is not None:
+			if self.info.percentage is None:
+				return False
 			return self.info.percentage <= self.options.low_percentage
 
 		d = self.info.battery_time
+		if d is None:
+			return False
 		return d.days * 24 * 60 + d.seconds / 60.0 <= self.options.low_mins
 
 	def update_status(self, notification=True):
