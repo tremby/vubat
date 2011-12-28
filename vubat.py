@@ -79,7 +79,8 @@ class NotAvailableException(Exception):
 
 class ACPIInfo(BatteryInfo):
 	COMMAND = ["acpi", "--battery"]
-	SEARCH_PTRN = re.compile("(Unknown|Discharging|Charging|Full), (\d+)%(?:, (.*))?")
+	SEARCH_PTRN = re.compile("(Unknown|Discharging|Charging|Full)"
+			", (\d+)%(?:, (.*))?")
 
 	def __init__(self):
 		fail = False
@@ -89,11 +90,14 @@ class ACPIInfo(BatteryInfo):
 		except OSError:
 			fail = True
 		if fail or len(data) == 0 or p.returncode != 0:
-			raise NotAvailableException("couldn't get battery info through acpi")
+			raise NotAvailableException("couldn't get battery info through "
+					"acpi")
 		super(ACPIInfo, self).__init__()
 
 	def check(self):
-		data = subprocess.Popen(self.COMMAND, stdout=subprocess.PIPE).communicate()[0].strip().split("\n")[0] # FIXME: currently ignoring batteries beyond battery 0
+		data = subprocess.Popen(self.COMMAND,
+				stdout=subprocess.PIPE).communicate()[0].strip().split("\n")[0]
+		# FIXME: currently ignoring batteries beyond battery 0
 		match = re.search(self.SEARCH_PTRN, data)
 		if match is None:
 			print >>sys.stderr, "ACPI output didn't match regex: '%s'" % data
@@ -128,7 +132,8 @@ class IBAMInfo(BatteryInfo):
 		except OSError:
 			fail = True
 		if fail or len(data) == 0 or p.returncode != 0:
-			raise NotAvailableException("couldn't get battery info through ibam")
+			raise NotAvailableException("couldn't get battery info through "
+					"ibam")
 		self.adapted_time = None
 		self.check_count = self.SAMPLE_INTERVAL
 		super(IBAMInfo, self).__init__()
@@ -170,7 +175,8 @@ class Application:
 		except NotAvailableException:
 			self.info = ACPIInfo()
 		except NotAvailableException:
-			print >>sys.stderr, "Couldn't get battery status through IBAM or ACPI"
+			print >>sys.stderr, "Couldn't get battery status through IBAM or " \
+					"ACPI"
 			sys.exit(1)
 		self.icon = gtk.StatusIcon()
 		self.icon.connect("activate", self.on_activate)
