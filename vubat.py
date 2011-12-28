@@ -35,7 +35,7 @@ import datetime
 
 # gtk modules
 import pygtk
-pygtk.require ('2.0')
+pygtk.require("2.0")
 import gtk, gobject
 
 # optional modules
