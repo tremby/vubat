@@ -59,3 +59,4 @@ TODO
 - Fix FIXMEs. The major one is that "closed" handlers for notifications never 
   seem to get triggered and so the critical battery notification will just keep 
   popping up even if dismissed. Patches welcome.
+- Test in ibam (ibam doesn't work on my laptop) or remove support
