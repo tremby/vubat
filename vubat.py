@@ -238,6 +238,9 @@ class Application:
 				metavar="MS", action="callback", callback=set_interval, 
 				help="The interval in milliseconds between polls for battery "
 				"status (default %default)")
+		optionparser.add_option("--initial-notification", "-n", 
+				action="store_true", help="Show a notification as soon as the "
+				"program is started (normally this first status is supressed)")
 
 		(self.options, args) = optionparser.parse_args()
 		if len(args) != 0:
@@ -256,7 +259,7 @@ class Application:
 		self.handle_commandline_arguments()
 
 		# get the inital battery status
-		self.update_status(False)
+		self.update_status(self.options.initial_notification)
 
 		# set up the polling interval
 		gobject.timeout_add(self.options.interval, self.update_status)
