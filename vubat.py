@@ -184,15 +184,13 @@ class Application:
 		self.icon.set_visible(True)
 		self.last_status = None
 		self.last_pixmap = None
-		self.last_percentage = None
-		if pynotify is not None:
-			self.notification = None
-			self.critical = False
-			self.critical_notification_closed = False
-			pynotify.init(NAME)
+		self.notification = None
+		self.critical = False
+		self.previously_critical = False
+		self.critical_notification_closed = False
 
 	def handle_commandline_arguments(self):
-		default_low_percentage = 10
+		default_low_mins = 20
 
 		def set_low_percentage(option, opt_str, value, parser):
 			num = int(value)
@@ -221,15 +219,15 @@ class Application:
 				dest="low_percentage", type="int", default=None, 
 				metavar="PERCENTAGE", action="callback", 
 				callback=set_low_percentage, help="The battery "
-				"percentage below which a critical warning will be displayed "
-				"(default %d). Conflicts with --low-threshold-mins." % 
-				default_low_percentage)
+				"percentage below which a critical warning will be displayed. "
+				"Conflicts with --low-threshold-mins.")
 		optionparser.add_option("--low-threshold-mins", type="float", 
 				dest="low_mins", default=None, metavar="MINS", 
 				action="callback", callback=set_low_mins, help="The remaining "
 				"battery life in minutes (can be a floating point number) "
 				"below which a critical warning will be displayed. Conflicts "
-				"with --low-threshold-percentage. Currently uninplemented.")
+				"with --low-threshold-percentage. Default is %s." % 
+				default_low_mins)
 		optionparser.add_option("--interval", "-i", type="int", default=5000, 
 				metavar="MS", action="callback", callback=set_interval, 
 				help="The interval in milliseconds between polls for battery "
@@ -244,8 +242,8 @@ class Application:
 					"and --low-threshold-mins should be used")
 		elif self.options.low_percentage is None and \
 				self.options.low_mins is None:
-			self.options.low_percentage = \
-					default_low_percentage
+			self.options.low_mins = \
+					default_low_mins
 
 	def run(self):
 		# handle commandline arguments
@@ -281,6 +279,13 @@ class Application:
 		if self.critical:
 			self.critical_notification_closed = True
 
+	def below_threshold(self):
+		if self.options.low_percentage is not None:
+			return self.info.percentage <= self.options.low_percentage
+
+		d = self.info.battery_time
+		return d.days * 24 * 60 + d.seconds / 60.0 <= self.options.low_mins
+
 	def update_status(self, notification=True):
 		self.info.check()
 
@@ -290,33 +295,26 @@ class Application:
 
 		self.icon.set_tooltip(self.get_status_string())
 
-		# TODO: implement low_threshold_mins
-		if notification and pynotify is not None:
-			if self.critical:
-				if self.info.status == Status.CHARGING \
-						or self.info.status == Status.FULL \
-						or self.info.percentage > self.options.low_percentage:
-					# was critical, now not
-					self.critical = False
-					self.critical_notification_closed = False
-					self.display_notification()
-				elif not self.critical_notification_closed:
-					# critical status, notification has not been manually closed
-					self.display_notification()
-			elif self.info.percentage <= self.options.low_percentage and \
-					(self.last_percentage > self.options.low_percentage or \
-							self.info.status == Status.DISCHARGING \
-							and self.last_status != Status.DISCHARGING):
-				# fresh critical status
-				self.critical = True
-				self.display_notification()
-			elif self.last_status != self.info.status:
-				# status has changed
-				self.display_notification()
+		self.critical = self.below_threshold() \
+				and self.info.status == Status.DISCHARGING
+
+		if self.critical and not self.previously_critical:
+			# fresh critical
+			if notification: self.display_notification()
+		elif not self.critical and self.previously_critical:
+			# no longer critical
+			self.critical_notification_closed = False
+			if notification: self.display_notification()
+		elif self.critical and not self.critical_notification_closed:
+			# still critical, notification hasn't been closed: update
+			if notification: self.display_notification()
+		elif self.last_status != self.info.status:
+			# status has changed
+			if notification: self.display_notification()
 
 		self.last_status = self.info.status
 		self.last_pixmap = pixmap
-		self.last_percentage = self.info.percentage
+		self.previously_critical = self.critical
 
 		return True
 
@@ -355,6 +353,7 @@ class Application:
 			title = "Battery status"
 
 		if self.notification is None:
+			pynotify.init(NAME)
 			self.notification = pynotify.Notification(title, 
 					self.get_status_string(), 
 					os.path.abspath(os.path.join(PIXMAP_DIR, 
