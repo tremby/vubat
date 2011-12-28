@@ -5,7 +5,7 @@ DESCRIPTION="System tray battery status monitor"
 AUTHOR = "Simon Ortling, Bart Nagel"
 AUTHOR_EMAIL = "krabat@vonuebel.com, bart@tremby.net"
 URL = "https://github.com/tremby/vubat"
-VERSION = "0.1.0"
+VERSION = "0.1.1~git"
 LICENSE = "GNU GPLv3"
 COPYRIGHT_YEAR = "2011"
 
