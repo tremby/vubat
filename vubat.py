@@ -293,7 +293,8 @@ class Application:
 		if notification and pynotify is not None:
 			if self.critical_notification is not None:
 				n = self.critical_notification
-				if self.info.status == 1 or self.info.status == 2 \
+				if self.info.status == Status.CHARGING \
+						or self.info.status == Status.FULL \
 						or self.info.percentage > self.options.low_percentage:
 					# doesn't matter any more -- replace with normal 
 					# notification
@@ -309,7 +310,8 @@ class Application:
 					n.show()
 			elif self.info.percentage <= self.options.low_percentage and \
 					(self.last_percentage > self.options.low_percentage or \
-							self.info.status == 0 and self.last_status != 0):
+							self.info.status == Status.DISCHARGING \
+							and self.last_status != Status.DISCHARGING):
 				# display critical notification
 				n = self.critical_notification = pynotify.Notification(
 						"Battery low", self.get_status_string(), 
