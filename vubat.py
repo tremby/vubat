@@ -215,6 +215,7 @@ class Application:
 						"Battery low", self.get_status_string(), 
 						os.path.abspath(os.path.join(PIXMAP_DIR, 
 							self.get_pixmap())))
+				n.attach_to_status_icon(self.icon)
 				n.set_urgency(pynotify.URGENCY_CRITICAL)
 				n.set_timeout(pynotify.EXPIRES_NEVER)
 				#print gobject.signal_list_names(n)
@@ -249,6 +250,7 @@ class Application:
 					self.get_status_string(), 
 					os.path.abspath(os.path.join(PIXMAP_DIR, 
 						self.get_pixmap())))
+			n.attach_to_status_icon(self.icon)
 			n.show()
 
 	def on_activate(self, icon, data=None):
