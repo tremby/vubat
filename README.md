@@ -1,7 +1,7 @@
 vubat
 =====
 
-ABOUT
+About
 -----
 
 vubat is a small system tray battery status monitor written in Python and GTK.
@@ -20,14 +20,14 @@ The tray icon is coloured according to the battery's status:
 - green when battery is discharging and up to 100%
 - blue when battery is charging or charged
 
-REQUIREMENTS
+Requirements
 ------------
 
 - some version of pygtk
 - optionally, pynotify (in Ubuntu this is in the package python-notify), to 
   enable notifications
 
-INSTALLATION
+Installation
 ------------
 
 It's possible to just run it from the working directory with no further steps, 
@@ -41,7 +41,7 @@ To install to /usr/local (root permissions are required):
 
 	python setup.py install
 
-USAGE
+Usage
 -----
 
 	vubat
