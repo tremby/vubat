@@ -186,7 +186,8 @@ class Application:
 		self.last_pixmap = None
 		self.last_percentage = None
 		if pynotify is not None:
-			self.critical_notification = None
+			self.notification = None
+			self.critical = False
 			self.critical_notification_closed = False
 			pynotify.init(NAME)
 
@@ -276,9 +277,9 @@ class Application:
 					break
 		return "status%d.png" % idx
 
-	def critical_notification_closed_handler(self, n):
-		print "closed handler" # FIXME: this never happens!
-		self.critical_notification_closed = True
+	def notification_closed_handler(self, n):
+		if self.critical:
+			self.critical_notification_closed = True
 
 	def update_status(self, notification=True):
 		self.info.check()
@@ -291,39 +292,26 @@ class Application:
 
 		# TODO: implement low_threshold_mins
 		if notification and pynotify is not None:
-			if self.critical_notification is not None:
-				n = self.critical_notification
+			if self.critical:
 				if self.info.status == Status.CHARGING \
 						or self.info.status == Status.FULL \
 						or self.info.percentage > self.options.low_percentage:
-					# doesn't matter any more -- replace with normal 
-					# notification
-					n.close()
-					self.critical_notification = None
+					# was critical, now not
+					self.critical = False
 					self.critical_notification_closed = False
 					self.display_notification()
 				elif not self.critical_notification_closed:
-					# it has not been manually closed -- update it
-					n.update("Low battery", self.get_status_string(), 
-							os.path.abspath(os.path.join(PIXMAP_DIR, 
-								self.get_pixmap())))
-					n.show()
+					# critical status, notification has not been manually closed
+					self.display_notification()
 			elif self.info.percentage <= self.options.low_percentage and \
 					(self.last_percentage > self.options.low_percentage or \
 							self.info.status == Status.DISCHARGING \
 							and self.last_status != Status.DISCHARGING):
-				# display critical notification
-				n = self.critical_notification = pynotify.Notification(
-						"Battery low", self.get_status_string(), 
-						os.path.abspath(os.path.join(PIXMAP_DIR, 
-							self.get_pixmap())))
-				n.attach_to_status_icon(self.icon)
-				n.set_urgency(pynotify.URGENCY_CRITICAL)
-				n.set_timeout(pynotify.EXPIRES_NEVER)
-				#print gobject.signal_list_names(n)
-				n.connect("closed", self.critical_notification_closed_handler)
-				n.show()
+				# fresh critical status
+				self.critical = True
+				self.display_notification()
 			elif self.last_status != self.info.status:
+				# status has changed
 				self.display_notification()
 
 		self.last_status = self.info.status
@@ -358,15 +346,37 @@ class Application:
 		widget.hide()
 
 	def display_notification(self):
-		if pynotify is not None:
-			n = pynotify.Notification("Battery status", 
+		if pynotify is None:
+			return
+
+		if self.critical:
+			title = "Low battery"
+		else:
+			title = "Battery status"
+
+		if self.notification is None:
+			self.notification = pynotify.Notification(title, 
 					self.get_status_string(), 
 					os.path.abspath(os.path.join(PIXMAP_DIR, 
 						self.get_pixmap())))
-			n.attach_to_status_icon(self.icon)
-			n.show()
+			self.notification.attach_to_status_icon(self.icon)
+			self.notification.connect("closed", self.notification_closed_handler)
+		else:
+			self.notification.update(title, self.get_status_string(), 
+					os.path.abspath(os.path.join(PIXMAP_DIR, 
+						self.get_pixmap())))
+
+		if self.critical:
+			self.notification.set_urgency(pynotify.URGENCY_CRITICAL)
+			self.notification.set_timeout(pynotify.EXPIRES_NEVER)
+		else:
+			self.notification.set_urgency(pynotify.URGENCY_NORMAL)
+			self.notification.set_timeout(pynotify.EXPIRES_DEFAULT)
+
+		self.notification.show()
 
 	def on_activate(self, icon, data=None):
+		self.critical_notification_closed = False
 		self.display_notification()
 
 	def on_popup_response(self, widget, response, data=None):
