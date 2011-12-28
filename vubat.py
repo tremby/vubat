@@ -33,6 +33,7 @@ import subprocess
 import optparse
 import datetime
 import signal
+import atexit
 
 # gtk modules
 import pygtk
@@ -262,6 +263,12 @@ class Application:
 
 		# listen for USR1 signal and force an update whenever it's received
 		signal.signal(signal.SIGUSR1, self.update_status)
+
+		# clean up notification on exit
+		@atexit.register
+		def cleanup():
+			if self.notification is not None:
+				self.notification.close()
 
 		# run the GTK mail loop
 		try:
