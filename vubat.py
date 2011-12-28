@@ -30,20 +30,19 @@ If not, see <http://www.gnu.org/licenses/>.
 import sys, os
 import re
 import subprocess
+import optparse
 
 # gtk modules
 import pygtk
 pygtk.require ('2.0')
 import gtk, gobject
+
+# optional modules
 try:
 	import pynotify
 except ImportError:
 	print >>sys.stderr, "Install pynotify for notification support"
 	pynotify = None
-
-CHECK_INTERVAL = 5000 # in milliseconds
-
-LOW_THRESHOLD = 10
 
 def get_pixmap_dir():
 	"""search for status icons"""
@@ -155,9 +154,73 @@ class Application:
 			self.critical_notification_closed = False
 			pynotify.init(NAME)
 
+	def handle_commandline_arguments(self):
+		default_low_percentage = 10
+
+		def set_low_percentage(option, opt_str, value, parser):
+			num = int(value)
+			if num < 0 or num > 100:
+				raise optparse.OptionValueError("Low threshold percentage "
+						"('%s' given) should be between 0 and 100" % num)
+			setattr(parser.values, option.dest, num)
+
+		def set_low_mins(option, opt_str, value, parser):
+			num = float(value)
+			if num < 0:
+				raise optparse.OptionValueError("Low threshold time "
+						"('%s' given) should be positive" % num)
+			setattr(parser.values, option.dest, num)
+
+		def set_interval(option, opt_str, value, parser):
+			num = int(value)
+			if num < 0:
+				raise optparse.OptionValueError("Interval ('%s' given) should "
+						"be positive" % num)
+			setattr(parser.values, option.dest, num)
+
+		optionparser = optparse.OptionParser(usage="%prog [options]",
+				version="%prog " + VERSION)
+		optionparser.add_option("--low-threshold-percentage", 
+				dest="low_percentage", type="int", default=None, 
+				metavar="PERCENTAGE", action="callback", 
+				callback=set_low_percentage, help="The battery "
+				"percentage below which a critical warning will be displayed "
+				"(default %d). Conflicts with --low-threshold-mins." % 
+				default_low_percentage)
+		optionparser.add_option("--low-threshold-mins", type="float", 
+				dest="low_mins", default=None, metavar="MINS", 
+				action="callback", callback=set_low_mins, help="The remaining "
+				"battery life in minutes (can be a floating point number) "
+				"below which a critical warning will be displayed. Conflicts "
+				"with --low-threshold-percentage. Currently uninplemented.")
+		optionparser.add_option("--interval", "-i", type="int", default=5000, 
+				metavar="MS", action="callback", callback=set_interval, 
+				help="The interval in milliseconds between polls for battery "
+				"status (default %default)")
+
+		(self.options, args) = optionparser.parse_args()
+		if len(args) != 0:
+			optionparser.error("Expected no non-option arguments")
+		if self.options.low_percentage is not None and \
+				self.options.low_mins is not None:
+			optionparser.error("At maximum one of --low-threshold-percentage "
+					"and --low-threshold-mins should be used")
+		elif self.options.low_percentage is None and \
+				self.options.low_mins is None:
+			self.options.low_percentage = \
+					default_low_percentage
+
 	def run(self):
+		# handle commandline arguments
+		self.handle_commandline_arguments()
+
+		# get the inital battery status
 		self.update_status(False)
-		gobject.timeout_add(CHECK_INTERVAL, self.update_status)
+
+		# set up the polling interval
+		gobject.timeout_add(self.options.interval, self.update_status)
+
+		# run the GTK mail loop
 		try:
 			gtk.main()
 		except KeyboardInterrupt:
@@ -190,11 +253,12 @@ class Application:
 
 		self.icon.set_tooltip(self.get_status_string())
 
+		# TODO: implement low_threshold_mins
 		if notification and pynotify is not None:
 			if self.critical_notification is not None:
 				n = self.critical_notification
 				if self.info.status == 1 or self.info.status == 2 \
-						or self.info.percentage > LOW_THRESHOLD:
+						or self.info.percentage > self.options.low_percentage:
 					# doesn't matter any more -- replace with normal 
 					# notification
 					n.close()
@@ -207,9 +271,9 @@ class Application:
 							os.path.abspath(os.path.join(PIXMAP_DIR, 
 								self.get_pixmap())))
 					n.show()
-			elif self.info.percentage <= LOW_THRESHOLD and (
-					self.last_percentage > LOW_THRESHOLD
-					or self.info.status == 0 and self.last_status != 0):
+			elif self.info.percentage <= self.options.low_percentage and \
+					(self.last_percentage > self.options.low_percentage or \
+							self.info.status == 0 and self.last_status != 0):
 				# display critical notification
 				n = self.critical_notification = pynotify.Notification(
 						"Battery low", self.get_status_string(), 
