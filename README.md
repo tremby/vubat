@@ -14,17 +14,17 @@ It was originally written by [Simon Ortling][1] and forked in 2011 by
 
 The tray icon is coloured according to the battery's status:
 
-- red when battery is discharging and below 10%
-- orange when battery is discharging and up to 30%
-- yellow when battery is discharging and up to 60%
-- green when battery is discharging and up to 100%
-- blue when battery is charging or charged
+- Blue when battery is charging or charged
+- Green when battery is discharging anywhere down to 60%
+- Yellow when battery is discharging anywhere down to 30%
+- Orange when battery is discharging anywhere down to 10%
+- Red when battery is low
 
 Requirements
 ------------
 
-- some version of pygtk
-- optionally, pynotify (in Ubuntu this is in the package python-notify), to 
+- Some version of pygtk
+- Optionally, pynotify (in Ubuntu this is in the package python-notify), to 
   enable notifications
 
 Installation
@@ -46,7 +46,7 @@ Usage
 
 	vubat
 
-no arguments, no parameters, nothing
+There are no arguments or options.
 
 You may want to put it in your `~/.xinitrc` or other window manager startup 
 script backgrounded, like
@@ -56,4 +56,6 @@ script backgrounded, like
 TODO
 ----
 
-- fix FIXMEs
+- Fix FIXMEs. The major one is that "closed" handlers for notifications never 
+  seem to get triggered and so the critical battery notification will just keep 
+  popping up even if dismissed. Patches welcome.
