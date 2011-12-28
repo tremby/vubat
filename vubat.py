@@ -265,7 +265,9 @@ class Application:
 		gobject.timeout_add(self.options.interval, self.update_status)
 
 		# listen for USR1 signal and force an update whenever it's received
-		signal.signal(signal.SIGUSR1, self.update_status)
+		def handle_signal(*args, **kwargs):
+			self.update_status()
+		signal.signal(signal.SIGUSR1, handle_signal)
 
 		# clean up notification on exit
 		@atexit.register
