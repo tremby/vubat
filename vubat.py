@@ -31,6 +31,7 @@ import sys, os
 import re
 import subprocess
 import optparse
+import datetime
 
 # gtk modules
 import pygtk
@@ -53,11 +54,25 @@ def get_pixmap_dir():
 			return item
 PIXMAP_DIR = get_pixmap_dir()
 
+class Status:
+	DISCHARGING = 0
+	CHARGING = 1
+	FULL = 2
+	UNKNOWN = 3
+
+	label = {
+		DISCHARGING: "Discharging",
+		CHARGING: "Charging",
+		FULL: "Fully charged",
+		UNKNOWN: "Unknown",
+	}
+
 class BatteryInfo(object):
 	def __init__(self):
 		self.status = None
 		self.percentage = None
 		self.battery_time = None
+		self.message = None
 
 class NotAvailableException(Exception):
 	pass
@@ -84,14 +99,20 @@ class ACPIInfo(BatteryInfo):
 			print >>sys.stderr, "ACPI output didn't match regex: '%s'" % data
 		self.percentage = int(match.group(2))
 		if match.group(1) == "Discharging":
-			self.status = 0
+			self.status = Status.DISCHARGING
 		elif match.group(1) == "Charging":
-			self.status = 1
+			self.status = Status.CHARGING
 		elif match.group(1) == "Full":
-			self.status = 2
+			self.status = Status.FULL
 		else:
-			self.status = 3
-		self.battery_time = match.group(3)
+			self.status = Status.UNKNOWN
+		self.battery_time = None
+		self.message = None
+		if match.group(3) is not None:
+			try:
+				self.battery_time = string_to_timedelta(match.group(3))
+			except ValueError:
+				self.message = match.group(3)
 
 class IBAMInfo(BatteryInfo):
 	RO_CMD = ["ibam", "-sr", "--percentbattery"]
@@ -127,15 +148,20 @@ class IBAMInfo(BatteryInfo):
 		self.percentage, self.battery_time, self.adapted_time = \
 				[int(re.search(self.SEARCH_PTRN, x).group(2)) for x in data]
 
+		self.battery_time = string_to_timedelta(self.battery_time)
+		self.adapted_time = string_to_timedelta(self.adapted_time)
+
 		if data[1].startswith("Battery"):
 			# "Battery time left" -- running on batteries
-			self.status = 0
+			self.status = Status.DISCHARGING
 		elif data[1].startswith("Charge"):
 			# "Charge time left" -- charging up
-			self.status = 1
-		else:
+			self.status = Status.CHARGING
+		elif data[1].startswith("Total"):
 			# "Total battery time", "Total charge time" -- fully charged
-			self.status = 2
+			self.status = Status.FULL
+		else:
+			self.status = Status.UNKNOWN
 
 class Application:
 	def __init__(self):
@@ -150,7 +176,6 @@ class Application:
 		self.icon.connect("activate", self.on_activate)
 		self.icon.connect("popup_menu", self.on_popup_menu)
 		self.icon.set_visible(True)
-		self.status_labels =("Discharging", "Charging", "Charged", "Unknown")
 		self.last_status = None
 		self.last_pixmap = None
 		self.last_percentage = None
@@ -300,15 +325,26 @@ class Application:
 		return True
 
 	def get_status_string(self):
-		status = "%s\n%d%%" % (self.status_labels[self.info.status], 
+		havetime = False
+		string = "%s\n%d%%" % (Status.label[self.info.status], 
 				self.info.percentage)
 		try:
-			status += "\n%d:%02d" % (self.info.adapted_time / 3600, 
-					(self.info.adapted_time / 60) % 60)
+			string += "\n%s" % timedelta_to_string(self.info.adapted_time)
+			havetime = True
 		except AttributeError:
 			if self.info.battery_time is not None:
-				status += "\n%s" % self.info.battery_time
-		return status
+				havetime = True
+				string += "\n%s" % timedelta_to_string(self.info.battery_time)
+		if havetime:
+			if self.info.status == Status.CHARGING:
+				string += " until charged"
+			elif self.info.status == Status.DISCHARGING:
+				string += " remaining"
+			elif self.info.status == Status.FULL:
+				string += " available"
+		if self.info.message is not None:
+			string += "\n%s" % self.info.message
+		return string
 
 	def on_activate_response(self, widget, response, data=None):
 		widget.hide()
@@ -361,6 +397,18 @@ class Application:
 
 		about_dialog.run()
 		about_dialog.destroy()
+
+def string_to_timedelta(string):
+	match = re.search("(\d+):(\d\d):(\d\d)", string)
+	if match is None:
+		raise ValueError("no HH:MM:SS string in input '%s'" % string)
+	return datetime.timedelta(0, int(match.group(3)), 0, 0, int(match.group(2)), 
+			int(match.group(1)))
+def timedelta_to_string(delta):
+	total_seconds = delta.days * 24 * 3600 + delta.seconds
+	h = total_seconds / 3600
+	m = (total_seconds - h * 3600) / 60
+	return "%d:%02d" % (h, m)
 
 if __name__ == "__main__":
 	app = Application()
