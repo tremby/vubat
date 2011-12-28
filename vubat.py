@@ -32,6 +32,7 @@ import re
 import subprocess
 import optparse
 import datetime
+import signal
 
 # gtk modules
 import pygtk
@@ -214,7 +215,11 @@ class Application:
 			setattr(parser.values, option.dest, num)
 
 		optionparser = optparse.OptionParser(usage="%prog [options]",
-				version="%prog " + VERSION)
+				version="%prog " + VERSION, description="vubat is a standalone "
+				"system tray battery status monitor supporting ibam and ACPI "
+				"backends, notifications and various other features.\n"
+				"Send the USR1 signal to the process to force an update, for "
+				"instance on an ACPI event.")
 		optionparser.add_option("--low-threshold-percentage", 
 				dest="low_percentage", type="int", default=None, 
 				metavar="PERCENTAGE", action="callback", 
@@ -254,6 +259,9 @@ class Application:
 
 		# set up the polling interval
 		gobject.timeout_add(self.options.interval, self.update_status)
+
+		# listen for USR1 signal and force an update whenever it's received
+		signal.signal(signal.SIGUSR1, self.update_status)
 
 		# run the GTK mail loop
 		try:

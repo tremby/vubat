@@ -55,6 +55,11 @@ script backgrounded, like
 
 	vubat &
 
+To force vubat to update you can send it the `USR1` signal, for instance on ACPI 
+events so that the status is updated promptly.
+
+	killall -USR1 vubat
+
 TODO
 ----
 
