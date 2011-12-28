@@ -117,19 +117,24 @@ class IBAMInfo(BatteryInfo):
 		if self.check_count >= self.SAMPLE_INTERVAL:
 			# check and write sample
 			self.check_count = 0
-			data = subprocess.Popen(self.RW_CMD, stdout=subprocess.PIPE).communicate()[0].strip().split("\n")
+			data = subprocess.Popen(self.RW_CMD,
+					stdout=subprocess.PIPE).communicate()[0].strip().split("\n")
 		else:
 			# check read only
-			data = subprocess.Popen(self.RO_CMD, stdout=subprocess.PIPE).communicate()[0].strip().split("\n")
+			data = subprocess.Popen(self.RO_CMD,
+					stdout=subprocess.PIPE).communicate()[0].strip().split("\n")
 
-		self.percentage, self.battery_time, self.adapted_time = [ 
-				int(re.search(self.SEARCH_PTRN, x).group(2)) for x in data]
+		self.percentage, self.battery_time, self.adapted_time = \
+				[int(re.search(self.SEARCH_PTRN, x).group(2)) for x in data]
 
 		if data[1].startswith("Battery"):
+			# "Battery time left" -- running on batteries
 			self.status = 0
 		elif data[1].startswith("Charge"):
+			# "Charge time left" -- charging up
 			self.status = 1
 		else:
+			# "Total battery time", "Total charge time" -- fully charged
 			self.status = 2
 
 class Application:
