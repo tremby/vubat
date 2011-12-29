@@ -272,8 +272,10 @@ class Application:
 		# clean up notification on exit
 		@atexit.register
 		def cleanup():
-			if self.notification is not None:
+			try:
 				self.notification.close()
+			except:
+				pass
 
 		# run the GTK mail loop
 		try:
