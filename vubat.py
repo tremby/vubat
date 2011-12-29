@@ -277,13 +277,17 @@ class Application:
 			self.update_status(True)
 		signal.signal(signal.SIGUSR2, handle_signal_usr2)
 
+		# listen for kill signals and exit cleanly
+		def handle_exit_signal(*args, **kwargs):
+			sys.exit(0)
+		signal.signal(signal.SIGINT, handle_exit_signal)
+		signal.signal(signal.SIGTERM, handle_exit_signal)
+
 		# clean up notification on exit
 		@atexit.register
 		def cleanup():
-			try:
+			if self.notification is not None:
 				self.notification.close()
-			except:
-				pass
 
 		# run the GTK mail loop
 		try:
