@@ -60,6 +60,9 @@ events so that the status is updated promptly.
 
 	killall -USR1 vubat
 
+Or to force a notification to appear even if nothing is new or important you can 
+send the `USR2` signal.
+
 TODO
 ----
 

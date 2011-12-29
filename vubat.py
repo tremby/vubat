@@ -218,9 +218,11 @@ class Application:
 		optionparser = optparse.OptionParser(usage="%prog [options]",
 				version="%prog " + VERSION, description="vubat is a standalone "
 				"system tray battery status monitor supporting ibam and ACPI "
-				"backends, notifications and various other features.\n"
-				"Send the USR1 signal to the process to force an update, for "
-				"instance on an ACPI event.")
+				"backends, notifications and various other features.", 
+				epilog="Send the USR1 signal to the process to force an "
+				"update, for instance on an ACPI event. Send the USR2 signal "
+				"to force an update and notification even if nothing is new or "
+				"important, for instance from a keyboard shortcut.")
 		optionparser.add_option("--low-threshold-percentage", 
 				dest="low_percentage", type="int", default=None, 
 				metavar="PERCENTAGE", action="callback", 
@@ -265,9 +267,15 @@ class Application:
 		gobject.timeout_add(self.options.interval, self.update_status)
 
 		# listen for USR1 signal and force an update whenever it's received
-		def handle_signal(*args, **kwargs):
+		def handle_signal_usr1(*args, **kwargs):
 			self.update_status()
-		signal.signal(signal.SIGUSR1, handle_signal)
+		signal.signal(signal.SIGUSR1, handle_signal_usr1)
+
+		# listen for USR2 signal and force an update and notification whenever 
+		# it's received
+		def handle_signal_usr2(*args, **kwargs):
+			self.update_status(True)
+		signal.signal(signal.SIGUSR2, handle_signal_usr2)
 
 		# clean up notification on exit
 		@atexit.register
