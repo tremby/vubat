@@ -238,7 +238,7 @@ class Application:
 				metavar="MS", action="callback", callback=set_interval, 
 				help="The interval in milliseconds between polls for battery "
 				"status (default %default)")
-		optionparser.add_option("--initial-notification", "-n", 
+		optionparser.add_option("--initial-notification", "-n", default=False, 
 				action="store_true", help="Show a notification as soon as the "
 				"program is started (normally this first status is supressed)")
 
@@ -312,7 +312,7 @@ class Application:
 			return False
 		return d.days * 24 * 60 + d.seconds / 60.0 <= self.options.low_mins
 
-	def update_status(self, notification=True):
+	def update_status(self, notification=None):
 		self.info.check()
 
 		pixmap = self.get_pixmap()
@@ -323,20 +323,22 @@ class Application:
 
 		self.critical = self.below_threshold() \
 				and self.info.status == Status.DISCHARGING
-
-		if self.critical and not self.previously_critical:
-			# fresh critical
-			if notification: self.display_notification()
-		elif not self.critical and self.previously_critical:
-			# no longer critical
+		if not self.critical:
 			self.critical_notification_closed = False
-			if notification: self.display_notification()
-		elif self.critical and not self.critical_notification_closed:
-			# still critical, notification hasn't been closed: update
-			if notification: self.display_notification()
-		elif self.last_status != self.info.status:
-			# status has changed
-			if notification: self.display_notification()
+
+		if notification == True or notification is None and (
+				# fresh critical
+				self.critical and not self.previously_critical
+
+				# no longer critical
+				or not self.critical and self.previously_critical
+
+				# still critical, notification hasn't been closed
+				or self.critical and not self.critical_notification_closed
+
+				# status has changed
+				or self.last_status != self.info.status):
+			self.display_notification()
 
 		self.last_status = self.info.status
 		self.last_pixmap = pixmap
