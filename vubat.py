@@ -192,7 +192,7 @@ class Application:
 		self.critical_notification_closed = False
 
 	def handle_commandline_arguments(self):
-		default_low_mins = 20
+		default_low_mins = 10
 
 		def set_low_percentage(option, opt_str, value, parser):
 			num = int(value)
