@@ -33,7 +33,6 @@ import subprocess
 import optparse
 import datetime
 import signal
-import atexit
 
 # gtk modules
 import pygtk
@@ -179,7 +178,7 @@ class Application:
 		except NotAvailableException:
 			print >>sys.stderr, "Couldn't get battery status through IBAM or " \
 					"ACPI"
-			sys.exit(1)
+			self.exit(1)
 		self.icon = gtk.StatusIcon()
 		self.icon.connect("activate", self.on_activate)
 		self.icon.connect("popup_menu", self.on_popup_menu)
@@ -279,15 +278,9 @@ class Application:
 
 		# listen for kill signals and exit cleanly
 		def handle_exit_signal(*args, **kwargs):
-			sys.exit(0)
+			self.exit(0)
 		signal.signal(signal.SIGINT, handle_exit_signal)
 		signal.signal(signal.SIGTERM, handle_exit_signal)
-
-		# clean up notification on exit
-		@atexit.register
-		def cleanup():
-			if self.notification is not None:
-				self.notification.close()
 
 		# run the GTK mail loop
 		try:
@@ -420,7 +413,7 @@ class Application:
 
 	def on_popup_response(self, widget, response, data=None):
 		if response == gtk.RESPONSE_OK:
-			gtk.main_quit()
+			self.exit()
 		else:
 			widget.hide()
 
@@ -431,7 +424,7 @@ class Application:
 		about.connect("activate", self.show_about_dialog)
 		menu.append(about)
 		quit = gtk.ImageMenuItem(gtk.STOCK_QUIT)
-		quit.connect("activate", gtk.main_quit)
+		quit.connect("activate", self.exit)
 		menu.append(quit)
 
 		menu.show_all()
@@ -454,6 +447,16 @@ class Application:
 
 		about_dialog.run()
 		about_dialog.destroy()
+
+	def exit(self, *args, **kwargs):
+		if self.notification is not None:
+			self.notification.close()
+		gtk.main_quit()
+		try:
+			code = kwargs.code
+		except AttributeError:
+			code = 0
+		sys.exit(code)
 
 def string_to_timedelta(string):
 	match = re.search("(\d+):(\d\d):(\d\d)", string)
