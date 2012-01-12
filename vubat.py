@@ -37,7 +37,7 @@ import signal
 # gtk modules
 import pygtk
 pygtk.require("2.0")
-import gtk, gobject
+import gtk, gobject, glib
 
 # optional modules
 try:
@@ -450,7 +450,10 @@ class Application:
 
 	def exit(self, *args, **kwargs):
 		if self.notification is not None:
-			self.notification.close()
+			try:
+				self.notification.close()
+			except glib.GError:
+				pass
 		gtk.main_quit()
 		try:
 			code = kwargs.code
