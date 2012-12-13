@@ -391,6 +391,7 @@ class Application:
 					self.get_status_string(), 
 					os.path.abspath(os.path.join(PIXMAP_DIR, 
 						self.get_pixmap())))
+			self.notification.set_hint("transient", 1)
 			if hasattr(self.notification, "attach_to_status_icon"):
 				self.notification.attach_to_status_icon(self.icon)
 			self.notification.connect("closed", self.notification_closed_handler)
