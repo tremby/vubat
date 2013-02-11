@@ -282,7 +282,7 @@ class Application:
 		signal.signal(signal.SIGINT, handle_exit_signal)
 		signal.signal(signal.SIGTERM, handle_exit_signal)
 
-		# run the GTK mail loop
+		# run the GTK main loop
 		try:
 			gtk.main()
 		except KeyboardInterrupt:
