@@ -353,8 +353,12 @@ class Application:
 
 	def get_status_string(self):
 		havetime = False
-		string = "%s\n%d%%" % (Status.label[self.info.status], 
-				self.info.percentage)
+
+		string = Status.label[self.info.status]
+
+		if self.info.percentage is not None:
+			string += "\n%d%%" % self.info.percentage
+
 		try:
 			string += "\n%s" % timedelta_to_string(self.info.adapted_time)
 			havetime = True
