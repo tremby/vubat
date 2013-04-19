@@ -60,12 +60,14 @@ class Status:
 	CHARGING = 1
 	FULL = 2
 	UNKNOWN = 3
+	NOBATTERY = 4
 
 	label = {
 		DISCHARGING: "Discharging",
 		CHARGING: "Charging",
 		FULL: "Fully charged",
 		UNKNOWN: "Unknown",
+		NOBATTERY: "No battery",
 	}
 
 class BatteryInfo(object):
@@ -90,7 +92,7 @@ class ACPIInfo(BatteryInfo):
 			data = p.communicate()[0]
 		except OSError:
 			fail = True
-		if fail or len(data) == 0 or p.returncode != 0:
+		if fail or p.returncode != 0:
 			raise NotAvailableException("couldn't get battery info through "
 					"acpi")
 		super(ACPIInfo, self).__init__()
@@ -98,26 +100,35 @@ class ACPIInfo(BatteryInfo):
 	def check(self):
 		data = subprocess.Popen(self.COMMAND,
 				stdout=subprocess.PIPE).communicate()[0].strip().split("\n")[0]
-		# FIXME: currently ignoring batteries beyond battery 0
-		match = re.search(self.SEARCH_PTRN, data)
-		if match is None:
-			print >>sys.stderr, "ACPI output didn't match regex: '%s'" % data
-		self.percentage = int(match.group(2))
-		if match.group(1) == "Discharging":
-			self.status = Status.DISCHARGING
-		elif match.group(1) == "Charging":
-			self.status = Status.CHARGING
-		elif match.group(1) == "Full":
-			self.status = Status.FULL
+
+		if len(data) == 0:
+			# assuming success code, no output means no batteries
+			self.status = Status.NOBATTERY
+			self.battery_time = None
+			self.message = None
+			self.percentage = None
 		else:
-			self.status = Status.UNKNOWN
-		self.battery_time = None
-		self.message = None
-		if match.group(3) is not None:
-			try:
-				self.battery_time = string_to_timedelta(match.group(3))
-			except ValueError:
-				self.message = match.group(3)
+			# FIXME: currently ignoring batteries beyond battery 0
+			match = re.search(self.SEARCH_PTRN, data)
+			print data
+			if match is None:
+				print >>sys.stderr, "ACPI output didn't match regex: '%s'" % data
+			self.percentage = int(match.group(2))
+			if match.group(1) == "Discharging":
+				self.status = Status.DISCHARGING
+			elif match.group(1) == "Charging":
+				self.status = Status.CHARGING
+			elif match.group(1) == "Full":
+				self.status = Status.FULL
+			else:
+				self.status = Status.UNKNOWN
+			self.battery_time = None
+			self.message = None
+			if match.group(3) is not None:
+				try:
+					self.battery_time = string_to_timedelta(match.group(3))
+				except ValueError:
+					self.message = match.group(3)
 
 class IBAMInfo(BatteryInfo):
 	RO_CMD = ["ibam", "-sr", "--percentbattery"]
@@ -133,6 +144,8 @@ class IBAMInfo(BatteryInfo):
 		except OSError:
 			fail = True
 		if fail or len(data) == 0 or p.returncode != 0:
+			# TODO: what does no output with a success error code mean? what 
+			# happens if there are no batteries?
 			raise NotAvailableException("couldn't get battery info through "
 					"ibam")
 		self.adapted_time = None
@@ -289,10 +302,7 @@ class Application:
 			pass
 
 	def get_pixmap(self):
-		if self.info.status:
-			# we are not running on battery
-			idx = 5
-		else:
+		if self.info.status == Status.DISCHARGING:
 			idx = 4
 			tmp = 0
 			for i in range(4):
@@ -300,6 +310,10 @@ class Application:
 				if self.info.percentage <= tmp:
 					idx = i + 1
 					break
+		elif self.info.status == Status.NOBATTERY:
+			idx = 0
+		else:
+			idx = 5
 		return "status%d.png" % idx
 
 	def notification_closed_handler(self, n):

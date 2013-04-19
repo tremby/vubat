@@ -38,6 +38,7 @@ setup(
 	data_files=[
 		("share/pixmaps/vubat", [
 		"pixmaps/vubat.png",
+		"pixmaps/status0.png",
 		"pixmaps/status1.png",
 		"pixmaps/status2.png",
 		"pixmaps/status3.png",
