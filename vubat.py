@@ -357,7 +357,11 @@ class Application:
 
 				# status has changed
 				or self.last_status != self.info.status):
-			self.display_notification()
+			try:
+				self.display_notification()
+			except glib.GError:
+				print >>sys.stderr, "caught glib.GError, don't update last_status/pixmap or previously_critical, otherwise ignore"
+				return True
 
 		self.last_status = self.info.status
 		self.last_pixmap = pixmap
